@@ -115,7 +115,7 @@ def crack_pdf_hash(hash_str, pdf_name, mask="?d", min_len=4, max_len=8):
                 if 'ERROR' in line or 'FAILED' in line or 'WARNING' in line:
                     error_output.append(line.strip())
                     error_log.text('⚠️ ' + '\n'.join(error_output))
-                    log_error(f'Mode {desc}: {line.strip()}')
+                    logger.error(f'Mode {desc}: {line.strip()}')
                 
                 # 更新进度
                 progress = parse_hashcat_progress(line)
@@ -124,7 +124,7 @@ def crack_pdf_hash(hash_str, pdf_name, mask="?d", min_len=4, max_len=8):
                     elapsed = time.time() - start_time
                     status_msg = f'进度: {progress}% | 已用时间: {elapsed:.1f}秒'
                     status_text.text(status_msg)
-                    log_info(status_msg)
+                    logger.info(status_msg)
                 
                 # 显示详细日志
                 if 'Speed' in line:
