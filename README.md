@@ -21,12 +21,12 @@
 
 ### CLI Mode
 ```bash
-python pdfjoker_cli.py [input_file] [options]
+python app/cli_main.py input.pdf -o output.pdf
 ```
 
 ### Web UI Mode
 ```bash
-streamlit run pdfjoker_ui.py
+streamlit run app/streamlit_main.py
 ```
 
 The web interface will open in your default browser where you can:
