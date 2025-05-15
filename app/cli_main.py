@@ -36,10 +36,11 @@ class PdfLogger:
             f.write(f'\n[{timestamp}] 执行命令: {" ".join(cmd)}\n')
             f.write(f'[{timestamp}] 命令输出:\n{output}\n')
 
-def crack_pdf_hash(hash_str, mask="?d"):
+def crack_pdf_hash(hash_str, pdf_name, mask="?d"):
+    logger = PdfLogger(pdf_name)
     try:
         Config.validate()  # 验证hashcat是否存在
-        log_info('hashcat验证通过')
+        logger.info('hashcat验证通过')
         
         # 按照不同PDF版本的hash模式依次尝试
         hash_modes = [
@@ -49,13 +50,13 @@ def crack_pdf_hash(hash_str, mask="?d"):
             ('10400', 'PDF 1.1 - 1.3 (Acrobat 2 - 4)')
         ]
         
-        log_info('创建临时哈希文件')
+        logger.info('创建临时哈希文件')
         with open('temp_hash.txt', 'w') as f:
             f.write(hash_str)
         
         for mode, desc in hash_modes:
             print(f'🔍 尝试模式: {desc}')
-            log_info(f'开始尝试模式: {desc}')
+            logger.info(f'开始尝试模式: {desc}')
             
             cmd = [
                 str(Config.HASHCAT_BIN),
@@ -73,16 +74,16 @@ def crack_pdf_hash(hash_str, mask="?d"):
             ]
             
             # 记录开始执行的命令
-            log_info(f'开始执行模式 {desc}')
-            log_command(cmd, '开始执行...')
+            logger.info(f'开始执行模式 {desc}')
+            logger.command(cmd, '开始执行...')
             
             start_time = time.time()
-            log_info(f'进程启动时间: {datetime.fromtimestamp(start_time).strftime("%Y-%m-%d %H:%M:%S")}')
+            logger.info(f'进程启动时间: {datetime.fromtimestamp(start_time).strftime("%Y-%m-%d %H:%M:%S")}')
             
             result = run(cmd, capture_output=True, text=True, cwd=str(Config.HASHCAT_DIR))
             
             # 记录完整输出
-            log_command(cmd, result.stderr + '\n' + result.stdout)
+            logger.command(cmd, result.stderr + '\n' + result.stdout)
             
             # 检查错误输出
             error_lines = [line for line in result.stderr.split('\n') 
@@ -91,12 +92,12 @@ def crack_pdf_hash(hash_str, mask="?d"):
             if 'Status...........: Cracked' in result.stderr:
                 msg = f'✅ 使用模式 {desc} 破解成功！'
                 print(msg)
-                log_info(msg)
+                logger.info(msg)
                 with open('temp_hash.txt', 'r') as f:
                     for line in f:
                         if ':' in line:
                             password = line.split(':')[-1].strip()
-                            log_info(f'找到密码: {password}')
+                            logger.info(f'找到密码: {password}')
                             return password
             
             # 显示失败原因
@@ -105,36 +106,36 @@ def crack_pdf_hash(hash_str, mask="?d"):
                 for error in error_lines:
                     error_msg = f'  ⚠️ {error.strip()}'
                     print(error_msg)
-                    log_error(f'Mode {desc}: {error.strip()}')
+                    logger.error(f'Mode {desc}: {error.strip()}')
             else:
                 msg = f'❌ 模式 {desc} 尝试失败，切换到下一个模式'
                 print(msg)
-                log_info(msg)
+                logger.info(msg)
             
             # 显示性能信息
             for line in result.stderr.split('\n'):
                 if 'Speed' in line:
                     speed_msg = f'📊 {line.strip()}'
                     print(speed_msg)
-                    log_info(f'性能信息: {line.strip()}')
+                    logger.info(f'性能信息: {line.strip()}')
         
         msg = '❌ 所有模式都尝试失败'
         print(msg)
-        log_error(msg)
+        logger.error(msg)
         return None
     except FileNotFoundError as e:
         msg = f'❌ 错误：{str(e)}'
         print(msg)
-        log_error(msg)
+        logger.error(msg)
         return None
     except Exception as e:
         msg = f'❌ 未知错误：{str(e)}'
         print(msg)
-        log_error(msg)
+        logger.error(msg)
         return None
     finally:
         if os.path.exists('temp_hash.txt'):
-            log_info('删除临时哈希文件')
+            logger.info('删除临时哈希文件')
             os.remove('temp_hash.txt')
 
 def decrypt_pdf(input_file, password, output_file):
