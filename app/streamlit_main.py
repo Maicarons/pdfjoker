@@ -51,23 +51,23 @@ def crack_pdf_hash(hash_str, pdf_name, mask="?d", min_len=4, max_len=8):
     with tempfile.NamedTemporaryFile(delete=False) as tmp:
         tmp.write(hash_str.encode())
         tmp_path = tmp.name
-        log_info(f'创建临时文件: {tmp_path}')
+        logger.info(f'创建临时文件: {tmp_path}')
     
     # 按照不同PDF版本的hash模式依次尝试
     hash_modes = [
-        ('10500', 'PDF 1.4 - 1.6 (Acrobat 5 - 8)'),
-        ('10700', 'PDF 1.7 Level 8 (Acrobat 10 - 11)'),
-        ('10600', 'PDF 1.7 Level 3 (Acrobat 9)'),
+        ('10500', 'PDF 1.7 Level 8 (Acrobat 10 - 11)'),
+        ('10700', 'PDF 1.7 Level 3 (Acrobat 9)'),
+        ('10600', 'PDF 1.7 Level 3 (Acrobat 8)'),
         ('10400', 'PDF 1.1 - 1.3 (Acrobat 2 - 4)')
     ]
     
     try:
         Config.validate()  # 验证hashcat是否存在
-        log_info('hashcat验证通过')
+        logger.info('hashcat验证通过')
         
         for mode, desc in hash_modes:
             st.write(f'🔍 尝试模式: {desc}')
-            log_info(f'开始尝试模式: {desc}')
+            logger.info(f'开始尝试模式: {desc}')
             
             progress_bar = st.progress(0)
             status_text = st.empty()
@@ -93,12 +93,12 @@ def crack_pdf_hash(hash_str, pdf_name, mask="?d", min_len=4, max_len=8):
             ]
             
             # 记录开始执行的命令
-            log_info(f'开始执行模式 {desc}')
-            log_command(cmd, '开始执行...')
+            logger.info(f'开始执行模式 {desc}')
+            logger.command(cmd, '开始执行...')
             
             process = Popen(cmd, stdout=PIPE, stderr=PIPE, text=True, bufsize=1, cwd=str(Config.HASHCAT_DIR))
             start_time = time.time()
-            log_info(f'进程启动时间: {datetime.fromtimestamp(start_time).strftime("%Y-%m-%d %H:%M:%S")}')
+            logger.info(f'进程启动时间: {datetime.fromtimestamp(start_time).strftime("%Y-%m-%d %H:%M:%S")}')
             
             # 收集完整的输出
             output_lines = []
