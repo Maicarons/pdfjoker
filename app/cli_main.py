@@ -7,24 +7,34 @@ from pikepdf import Pdf
 from config import Config
 from datetime import datetime
 
-def log_info(msg):
-    """记录普通日志"""
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open(Config.ERROR_LOG, 'a', encoding='utf-8') as f:
-        f.write(f'[{timestamp}] {msg}\n')
-
-def log_error(error_msg):
-    """记录错误日志"""
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open(Config.ERROR_LOG, 'a', encoding='utf-8') as f:
-        f.write(f'[{timestamp}] ERROR: {error_msg}\n')
-
-def log_command(cmd, output):
-    """记录命令和输出"""
-    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    with open(Config.ERROR_LOG, 'a', encoding='utf-8') as f:
-        f.write(f'\n[{timestamp}] 执行命令: {" ".join(cmd)}\n')
-        f.write(f'[{timestamp}] 命令输出:\n{output}\n')
+class PdfLogger:
+    def __init__(self, pdf_name):
+        self.log_file = Config.get_pdf_log_path(pdf_name)
+        # 确保日志目录存在
+        self.log_file.parent.mkdir(exist_ok=True)
+        # 创建日志文件并写入开始信息
+        with open(self.log_file, 'w', encoding='utf-8') as f:
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            f.write(f'[{timestamp}] 开始处理PDF文件: {pdf_name}\n')
+    
+    def info(self, msg):
+        """记录普通日志"""
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        with open(self.log_file, 'a', encoding='utf-8') as f:
+            f.write(f'[{timestamp}] {msg}\n')
+    
+    def error(self, error_msg):
+        """记录错误日志"""
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        with open(self.log_file, 'a', encoding='utf-8') as f:
+            f.write(f'[{timestamp}] ERROR: {error_msg}\n')
+    
+    def command(self, cmd, output):
+        """记录命令和输出"""
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        with open(self.log_file, 'a', encoding='utf-8') as f:
+            f.write(f'\n[{timestamp}] 执行命令: {" ".join(cmd)}\n')
+            f.write(f'[{timestamp}] 命令输出:\n{output}\n')
 
 def crack_pdf_hash(hash_str, mask="?d"):
     try:
